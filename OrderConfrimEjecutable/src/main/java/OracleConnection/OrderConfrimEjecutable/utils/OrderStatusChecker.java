@@ -18,7 +18,6 @@ public class OrderStatusChecker {
 			}
 
 			ObjectMapper objectMapper = new ObjectMapper();
-			JSONObject jsonObject = new JSONObject(jsonResponse);
 			JsonNode rootNode = objectMapper.readTree(jsonResponse);
 			String paymentStatus = rootNode.get("payment_status").asText();
 

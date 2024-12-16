@@ -42,10 +42,8 @@ public class DataFetcher {
         List<PosHeader> results = new ArrayList<>();
 
         String fechaActual = obtenerFechaActual(); // Fecha actual del sistema
-
-        // Construir la consulta dinámica según las fechas proporcionadas
         String query = construirQuery(fechaInicial, fechaFinal, fechaActual);
-        
+
         System.out.println(query);
 
         try (Connection connection = OracleDBConnection.getConnection();
@@ -61,34 +59,24 @@ public class DataFetcher {
                     resultSet.getString("POS_ORDER_PASILLO"),
                     resultSet.getString("POS_ASSOCIATE_NUMBER")
                 );
-                // Datos de pagos
-                posHeader.setPosTenderType(resultSet.getString("POS_TENDER_TYPE_CODE"));
-                posHeader.setPosAmountDue(resultSet.getString("POS_AMOUNT_DUE"));
-                posHeader.setesquema(resultSet.getString("POS_CHARGE_OPTIONS"));
-                posHeader.setautorizacion(resultSet.getString("POS_AUTHORIZATION_CODE"));
-                posHeader.setcodigoRespuesta(resultSet.getString("POS_RESPONSE_CODE"));
-                posHeader.setnumTarjeta(resultSet.getString("POS_ACCOUNT_NUMBER"));
 
                 results.add(posHeader);
             }
 
         } catch (SQLException e) {
-            // Manejo mejorado de excepciones
             System.err.println("Error al ejecutar la consulta: " + e.getMessage());
         }
 
-        return results;
+        // Llamada al nuevo método para completar los datos de pagos
+        return fetchPagosData(results);
     }
+
 
     private static String construirQuery(String fechaInicial, String fechaFinal, String fechaActual) {
         StringBuilder queryBuilder = new StringBuilder(
             "SELECT h.POS_STORE, h.POS_TERMINAL, h.POS_TRANSACTION, h.POS_TRANSACTION_DATE, " +
-            "       h.POS_ORDER_PASILLO, h.POS_ASSOCIATE_NUMBER, " +
-            "       p.POS_TENDER_TYPE_CODE, p.POS_AMOUNT_DUE, p.POS_CHARGE_OPTIONS, p.POS_AUTHORIZATION_CODE, p.POS_RESPONSE_CODE, p.POS_ACCOUNT_NUMBER " +
+            "       h.POS_ORDER_PASILLO, h.POS_ASSOCIATE_NUMBER " + // Solo columnas de ONLINE_POS_HEADER
             "FROM ONLINE_POS_HEADER h " +
-            "LEFT JOIN ONLINE_POS_PAGOS p ON h.POS_STORE = p.POS_STORE " +
-            "                             AND h.POS_TERMINAL = p.POS_TERMINAL " +
-            "                             AND h.POS_TRANSACTION = p.POS_TRANSACTION " +
             "WHERE h.POS_ORDER_PASILLO IS NOT NULL " +
             "  AND h.POS_ORDER_PASILLO LIKE '400%' "
         );
@@ -98,27 +86,63 @@ public class DataFetcher {
 
         // Lógica para fechas
         if (fechaInicial != null && fechaFinal != null) {
-        	System.out.println("Fecha inicial y fecha Final");
-        	queryBuilder.append("AND TO_DATE(h.POS_TRANSACTION_DATE, 'DDMMYY') BETWEEN TO_DATE('")
+            System.out.println("Fecha inicial y fecha Final");
+            queryBuilder.append("AND TO_DATE(h.POS_TRANSACTION_DATE, 'DDMMYY') BETWEEN TO_DATE('")
                          .append(fechaInicial)
                          .append("', 'DDMMYY') AND TO_DATE('")
                          .append(fechaFinal)
                          .append("', 'DDMMYY') ");
         } else if (fechaInicial != null) {
-        	System.out.println("Fecha inical");
+            System.out.println("Fecha inicial");
             queryBuilder.append("AND TO_DATE(h.POS_TRANSACTION_DATE, 'DDMMYY') = TO_DATE('")
                          .append(fechaInicial)
                          .append("', 'DDMMYY') ");
         } else {
-        	System.out.println("Fecha Actual");
+            System.out.println("Fecha Actual");
             queryBuilder.append("AND TO_DATE(h.POS_TRANSACTION_DATE, 'DDMMYY') = TO_DATE('")
                          .append(fechaActual)
                          .append("', 'DDMMYY') ");
         }
 
-       
         return queryBuilder.toString();
     }
+
+    
+    public List<PosHeader> fetchPagosData(List<PosHeader> results) {
+        String queryPagos = "SELECT p.POS_STORE, p.POS_TERMINAL, p.POS_TRANSACTION, " +
+                            "       p.POS_TENDER_TYPE_CODE, p.POS_AMOUNT_DUE, p.POS_CHARGE_OPTIONS, " +
+                            "       p.POS_AUTHORIZATION_CODE, p.POS_RESPONSE_CODE, p.POS_ACCOUNT_NUMBER " +
+                            "FROM ONLINE_POS_PAGOS p " +
+                            "WHERE p.POS_STORE = ? AND p.POS_TERMINAL = ? AND p.POS_TRANSACTION = ?";
+
+        try (Connection connection = OracleDBConnection.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(queryPagos)) {
+
+            for (PosHeader header : results) {
+                // Configurar los parámetros del query con los datos de cada PosHeader
+                preparedStatement.setString(1, header.getPosStore());
+                preparedStatement.setString(2, header.getPosTerminal());
+                preparedStatement.setString(3, header.getPosTransaction());
+
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    while (resultSet.next()) {
+                        // Actualizar los campos adicionales de pagos en el mismo PosHeader
+                        header.setPosTenderType(resultSet.getString("POS_TENDER_TYPE_CODE"));
+                        header.setPosAmountDue(resultSet.getString("POS_AMOUNT_DUE"));
+                        header.setesquema(resultSet.getString("POS_CHARGE_OPTIONS"));
+                        header.setautorizacion(resultSet.getString("POS_AUTHORIZATION_CODE"));
+                        header.setcodigoRespuesta(resultSet.getString("POS_RESPONSE_CODE"));
+                        header.setnumTarjeta(resultSet.getString("POS_ACCOUNT_NUMBER"));
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al ejecutar el segundo query: " + e.getMessage());
+        }
+
+        return results;
+    }
+
 
 
     public static String obtenerFechaActual() {

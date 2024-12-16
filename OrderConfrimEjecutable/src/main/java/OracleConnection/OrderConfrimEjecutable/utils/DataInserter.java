@@ -26,6 +26,7 @@ public class DataInserter {
 				PreparedStatement insertStatement = connection.prepareStatement(INSERT_QUERY)) {
 			int contador = 0;
 			for (PosHeader posHeader : posHeaders) {
+				System.out.println("Número de orden: " + posHeader.toString());
 				contador++;
 				System.out.println("total de registros:" + numdeRegistros(posHeader));
 				String num;
@@ -56,18 +57,18 @@ public class DataInserter {
 					insertStatement.setString(14, posHeader.getcodigoRespuesta());
 					insertStatement.setString(15, posHeader.getconfirmacion());
 
-				//	insertStatement.executeUpdate(); // Ejecutar inserción para el registro actual
+					insertStatement.executeUpdate(); // Ejecutar inserción para el registro actual
 
 					insertStatement.setString(1, "999");
 					insertStatement.setString(10, posHeader.getTotal());
-				//	insertStatement.executeUpdate();
+					insertStatement.executeUpdate();
 					System.out.println("Registro insertado correctamente: " + posHeader);
 				} catch (SQLException e) {
 					System.err.println("Error al procesar el registro: " + posHeader + ". Error: " + e.getMessage());
 				}
 
 				
-				  if (contador > 50) { break; }
+			//	  if (contador > 50) { break; }
 				 
 			}
 		} catch (SQLException e) {

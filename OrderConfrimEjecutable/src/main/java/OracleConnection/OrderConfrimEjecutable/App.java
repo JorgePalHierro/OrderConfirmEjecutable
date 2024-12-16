@@ -63,12 +63,12 @@ public class App {
 
 			System.out.println("Número de orden: " + pasillo.toString());
 			
-			  if(contador >50) { break; }
+			 // if(contador >50) { break; }
 			 
 		}
 
 		DataInserter dt = new DataInserter();
-		//dt.insertData(pasilloList);
+		dt.insertData(pasilloList);
 	}
 
 }
