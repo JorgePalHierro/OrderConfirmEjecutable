@@ -17,20 +17,12 @@ import OracleConnection.OrderConfrimEjecutable.utils.OrderStatusChecker;
 public class App {
 	public static void main(String[] args) {
 
-		/*
-		 * try { // Intentamos obtener la conexión a la base de datos productiva
-		 * Connection connection = OracleDBConnection.getConnectionProductivo(); if
-		 * (connection != null && !connection.isClosed()) {
-		 * System.out.println("Conexión exitosa a la base de datos productiva."); } else
-		 * { System.out.
-		 * println("No se pudo establecer la conexión con la base de datos productiva."
-		 * ); } } catch (SQLException e) { System.out.
-		 * println("Error al intentar conectar con la base de datos productiva: " +
-		 * e.getMessage()); }
-		 */
+		
 
 		// Se obtienen los registros de la base de datos
 		DataFetcher dataFetcher = new DataFetcher();
+		
+		//Se crea la lista de orndenes que serán insertadas en la base
 		List<PosHeader> pasilloList = dataFetcher.fetchPasilloData();
 		/*
 		 * if (!pasilloList.isEmpty()) { DataInserter dataInserter = new DataInserter();
@@ -38,6 +30,8 @@ public class App {
 		 * System.out.println("No se encontraron datos para insertar."); }
 		 * 
 		 */
+		
+		
 
 		int contador = 0;
 		for (PosHeader pasillo : pasilloList) {
@@ -63,7 +57,7 @@ public class App {
 
 			System.out.println("Número de orden: " + pasillo.toString());
 			
-			 // if(contador >50) { break; }
+			  if(contador >100) { break; }
 			 
 		}
 
