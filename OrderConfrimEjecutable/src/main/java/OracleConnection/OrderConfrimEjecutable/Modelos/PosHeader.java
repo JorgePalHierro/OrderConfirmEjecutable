@@ -1,7 +1,11 @@
 package OracleConnection.OrderConfrimEjecutable.Modelos;
 
 public class PosHeader {
-    public PosHeader(String consecutivo,String posStore, String posTerminal, String posTransaction, String posTransactionDate,
+    public PosHeader() {
+		super();
+	}
+
+	public PosHeader(String consecutivo,String posStore, String posTerminal, String posTransaction, String posTransactionDate,
 			String posOrderPasillo, String posAssociateNumber, String posTenderType, String posAmountDue,
 			String fechaCompleta, String esquema, String autorizacion, String codigoRespuesta, String confirmacion,
 			String numTarjeta) {

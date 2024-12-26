@@ -22,7 +22,7 @@ public class DataInserter {
 
 	public void insertData(List<PosHeader> posHeaders) {
 
-		try (Connection connection = OracleDBConnection.getConnectionProductivo();
+		try (Connection connection = OracleDBConnection.getConnection();
 				PreparedStatement insertStatement = connection.prepareStatement(INSERT_QUERY)) {
 			int contador = 0;
 			
@@ -61,7 +61,7 @@ public class DataInserter {
 
 					insertStatement.executeUpdate(); // Ejecutar inserción para el registro actual
 					
-				/*	insertStatement.setString(1, "999");
+					insertStatement.setString(1, "999");
 					insertStatement.setString(2, posHeader.getPosStore());
 					insertStatement.setString(3, posHeader.getPosTerminal());
 					insertStatement.setString(4, posHeader.getPosTransaction());
@@ -78,7 +78,7 @@ public class DataInserter {
 					insertStatement.setString(15, posHeader.getconfirmacion());
 
 					
-					insertStatement.executeUpdate();*/
+					insertStatement.executeUpdate();
 					System.out.println("Registro insertado correctamente: " + posHeader);
 				} catch (SQLException e) {
 					System.err.println("Error al procesar el registro: " + posHeader + ". Error: " + e.getMessage());
@@ -95,7 +95,7 @@ public class DataInserter {
 
 	public int numdeRegistros(PosHeader posHeader) {
 
-		try (Connection connection = OracleDBConnection.getConnectionProductivo();
+		try (Connection connection = OracleDBConnection.getConnection();
 				PreparedStatement checkStatement = connection.prepareStatement(CHECK_EXISTENCE_QUERY)) {
 
 			checkStatement.setString(1, posHeader.getPosStore());

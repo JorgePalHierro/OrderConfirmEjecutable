@@ -17,12 +17,12 @@ import OracleConnection.OrderConfrimEjecutable.Modelos.PosHeader;
 
 public class DataFetcher {
 
-	private static final String PROPERTIES_FILE = "/application.properties";
+	
 	private static String fechaInicial;
 	private static String fechaFinal;
 
 	// Bloque estático para cargar propiedades
-	static {
+	/*static {
 		try (InputStream input = DataFetcher.class.getResourceAsStream(PROPERTIES_FILE)) {
 			Properties properties = new Properties();
 			if (input != null) {
@@ -37,7 +37,13 @@ public class DataFetcher {
 			fechaInicial = null;
 			fechaFinal = null;
 		}
-	}
+	}*/
+
+	
+	  public DataFetcher(String fechaInicial, String fechaFinal) {
+	        this.fechaInicial = fechaInicial;
+	        this.fechaFinal = fechaFinal;
+	    }
 
 	public List<PosHeader> fetchPasilloData() {
 		List<PosHeader> results = new ArrayList<>();
@@ -50,8 +56,11 @@ public class DataFetcher {
 		try (Connection connection = OracleDBConnection.getConnection();
 				PreparedStatement preparedStatement = connection.prepareStatement(query);
 				ResultSet resultSet = preparedStatement.executeQuery()) {
-
+			int cont = 0;
 			while (resultSet.next()) {
+				if (cont > 20) {
+					break;
+				}
 				PosHeader posHeader = new PosHeader(resultSet.getString("POS_STORE"),
 						resultSet.getString("POS_TERMINAL"), resultSet.getString("POS_TRANSACTION"),
 						resultSet.getString("POS_TRANSACTION_DATE"), resultSet.getString("POS_ORDER_PASILLO"),
@@ -61,18 +70,17 @@ public class DataFetcher {
 
 				if (numRegistroPosPagos > 0) {
 					results.add(posHeader);
-					System.out.println(posHeader.toString());
-					System.out.println("Número de registros" + countPosHeaderRecords(posHeader));
+					// System.out.println(posHeader.toString());
+					// System.out.println("Número de registros" + countPosHeaderRecords(posHeader));
 				}
 
 				countPosHeaderRecords(posHeader);
+				cont++;
 			}
 
 		} catch (SQLException e) {
 			System.err.println("Error al ejecutar la consulta: " + e.getMessage());
 		}
-
-		
 
 		// Llamada al nuevo método para completar los datos de pagos
 		return fetchPagosData(results);
@@ -107,28 +115,22 @@ public class DataFetcher {
 	}
 
 	public List<PosHeader> fetchPagosData(List<PosHeader> results) {
+	    List<PosHeader> respuesta = new ArrayList<>();
+	    
 	    String queryPagos = "SELECT p.POS_STORE, p.POS_TERMINAL, p.POS_TRANSACTION, "
 	            + "       p.POS_TENDER_TYPE_CODE, p.POS_AMOUNT_DUE, p.POS_TENDER_AUTHORIZATION_TEXT, p.POS_CHARGE_OPTIONS, "
 	            + "       p.POS_AUTHORIZATION_CODE, p.POS_RESPONSE_CODE, p.POS_ACCOUNT_NUMBER, p.POS_TENDER_DELETED "
-	            + "FROM ONLINE_POS_PAGOS p "
-	            + "WHERE p.POS_STORE = ? AND p.POS_TERMINAL = ? AND p.POS_TRANSACTION = ?";
+	            + "FROM ONLINE_POS_PAGOS p " + "WHERE p.POS_STORE = ? AND p.POS_TERMINAL = ? AND p.POS_TRANSACTION = ?";
 
 	    try (Connection connection = OracleDBConnection.getConnection();
 	         PreparedStatement preparedStatement = connection.prepareStatement(queryPagos)) {
 
-	        Iterator<PosHeader> iterator = results.iterator();
-
-	        while (iterator.hasNext()) {
-	            PosHeader header = iterator.next();
-
-	            // Configurar los parámetros del query con los datos de cada PosHeader
+	        for (PosHeader header : results) {
 	            preparedStatement.setString(1, header.getPosStore());
 	            preparedStatement.setString(2, header.getPosTerminal());
 	            preparedStatement.setString(3, header.getPosTransaction());
 
 	            try (ResultSet resultSet = preparedStatement.executeQuery()) {
-	                boolean validRecord = false;
-
 	                while (resultSet.next()) {
 	                    String authText = resultSet.getString("POS_TENDER_AUTHORIZATION_TEXT");
 	                    String tenderTypeCode = resultSet.getString("POS_TENDER_TYPE_CODE");
@@ -136,34 +138,40 @@ public class DataFetcher {
 
 	                    // Verificar condiciones de validación
 	                    if ("***BORRAR FORMA PAGO***".equals(tenderDeleted)) {
-	                        validRecord = false;
-	                        break; // No es necesario continuar evaluando este registro
+	                        continue; // Omitir este registro
 	                    }
 
-	                    if ((authText == null && "1".equals(tenderTypeCode)) || "Transacion aprobada".equals(authText)) {
-	                        validRecord = true;
+	                    if ((authText == null && "1".equals(tenderTypeCode))
+	                            || "Transacion aprobada".equals(authText)) {
+	                        // Crear un nuevo PosHeader basado en el objeto original
+	                        PosHeader nuevoRegistro = new PosHeader(
+	                                header.getConsecutivo(),
+	                                header.getPosStore(),
+	                                header.getPosTerminal(),
+	                                header.getPosTransaction(),
+	                                header.getPosTransactionDate(),
+	                                header.getPosOrderPasillo(),
+	                                header.getPosAssociateNumber(),
+	                                resultSet.getString("POS_TENDER_TYPE_CODE"),
+	                                resultSet.getString("POS_AMOUNT_DUE"),
+	                                header.getfechaCompleta(),
+	                                resultSet.getString("POS_CHARGE_OPTIONS"),
+	                                resultSet.getString("POS_AUTHORIZATION_CODE"),
+	                                resultSet.getString("POS_RESPONSE_CODE"),
+	                                header.getconfirmacion(),
+	                                resultSet.getString("POS_ACCOUNT_NUMBER")
+	                        );
 
-	                        // Actualizar los campos adicionales de pagos en el mismo PosHeader
-	                        header.setPosTenderType(resultSet.getString("POS_TENDER_TYPE_CODE"));
-	                        header.setPosAmountDue(resultSet.getString("POS_AMOUNT_DUE"));
-	                        header.setesquema(resultSet.getString("POS_CHARGE_OPTIONS"));
-	                        header.setautorizacion(resultSet.getString("POS_AUTHORIZATION_CODE"));
-	                        header.setcodigoRespuesta(resultSet.getString("POS_RESPONSE_CODE"));
-	                        header.setnumTarjeta(resultSet.getString("POS_ACCOUNT_NUMBER"));
+	                        respuesta.add(nuevoRegistro);
 	                    }
-	                }
-
-	                // Si no es un registro válido, eliminarlo del resultado
-	                if (!validRecord) {
-	                    iterator.remove();
 	                }
 	            }
 	        }
 	    } catch (SQLException e) {
-	        System.err.println("Error al ejecutar el segundo query: " + e.getMessage());
+	        System.err.println("Error al ejecutar el query: " + e.getMessage());
 	    }
-
-	    return results;
+	    
+	    return respuesta;
 	}
 
 

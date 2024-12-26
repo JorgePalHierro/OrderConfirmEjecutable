@@ -1,0 +1,8 @@
+OracleConnection\OrderConfrimEjecutable\App.class
+OracleConnection\OrderConfrimEjecutable\utils\DataInserter.class
+OracleConnection\OrderConfrimEjecutable\Modelos\PosHeader.class
+OracleConnection\OrderConfrimEjecutable\ApiService.class
+OracleConnection\OrderConfrimEjecutable\utils\DataFetcher.class
+OracleConnection\OrderConfrimEjecutable\EjecutarConsultaBD.class
+OracleConnection\OrderConfrimEjecutable\utils\OrderStatusChecker.class
+OracleConnection\OrderConfrimEjecutable\utils\OracleDBConnection.class
