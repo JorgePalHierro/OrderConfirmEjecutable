@@ -6,6 +6,7 @@ import java.util.List;
 
 import OracleConnection.OrderConfrimEjecutable.Modelos.PosHeader;
 import OracleConnection.OrderConfrimEjecutable.utils.DataFetcher;
+import OracleConnection.OrderConfrimEjecutable.utils.DataInserter;
 
 public class App {
     public static void main(String[] args) {
@@ -49,5 +50,8 @@ public class App {
                 break;
             }
         }
+        
+    	DataInserter dt = new DataInserter();
+    		dt.insertData(pasilloList);
     }
 }

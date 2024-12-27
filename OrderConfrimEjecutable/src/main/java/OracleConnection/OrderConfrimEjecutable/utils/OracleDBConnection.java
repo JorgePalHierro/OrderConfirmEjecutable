@@ -8,6 +8,17 @@ import java.sql.SQLException;
 import java.util.Properties;
 
 public class OracleDBConnection {
+	
+	static {
+	    try {
+	        // Carga explícita del controlador JDBC de Oracle
+	        Class.forName("oracle.jdbc.driver.OracleDriver");
+	        System.out.println("Driver de Oracle cargado exitosamente.");
+	    } catch (ClassNotFoundException e) {
+	        throw new RuntimeException("No se encontró el driver de Oracle", e);
+	    }
+	}
+
 
     private static Properties properties = new Properties();
 
