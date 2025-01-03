@@ -58,7 +58,7 @@ public class DataInserter {
 					insertStatement.setString(13, posHeader.getautorizacion());
 					insertStatement.setString(14, posHeader.getcodigoRespuesta());
 					insertStatement.setString(15, posHeader.getconfirmacion());
-
+					System.out.println("Insertar: "+ insertStatement.toString());
 					insertStatement.executeUpdate(); // Ejecutar inserción para el registro actual
 					
 					insertStatement.setString(1, "999");
@@ -85,7 +85,7 @@ public class DataInserter {
 				}
 
 				
-				  if (contador > 100) { break; }
+			//	  if (contador > 100) { break; }
 				 
 			}
 		} catch (SQLException e) {

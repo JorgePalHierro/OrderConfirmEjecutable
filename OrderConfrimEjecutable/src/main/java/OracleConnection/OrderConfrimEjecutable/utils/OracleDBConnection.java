@@ -24,6 +24,7 @@ public class OracleDBConnection {
 
     static {
         try (InputStream input = OracleDBConnection.class.getClassLoader().getResourceAsStream("database.properties")) {
+        	
             if (input == null) {
                 throw new RuntimeException("No se encontró el archivo database.properties");
             }

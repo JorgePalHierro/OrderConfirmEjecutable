@@ -7,6 +7,7 @@ import java.util.List;
 import OracleConnection.OrderConfrimEjecutable.Modelos.PosHeader;
 import OracleConnection.OrderConfrimEjecutable.utils.DataFetcher;
 import OracleConnection.OrderConfrimEjecutable.utils.DataInserter;
+import OracleConnection.OrderConfrimEjecutable.utils.OrderStatusChecker;
 
 public class App {
     public static void main(String[] args) {
@@ -31,10 +32,7 @@ public class App {
            // fechaFinal = fechaHoy.format(formatoFecha);
         }
 
-        // Imprimir las fechas seleccionadas
-        System.out.println("Fecha inicial: " + fechaInicial);
-        System.out.println("Fecha final: " + fechaFinal);
-
+       
         // Pasar las fechas a DataFetcher
         DataFetcher dataFetcher = new DataFetcher(fechaInicial, fechaFinal);
 
@@ -43,13 +41,36 @@ public class App {
 
         // Procesar los resultados
         int contador = 0;
+       
+        
+        
         for (PosHeader pasillo : pasilloList) {
-            contador++;
-            System.out.println("Orden procesada: " + pasillo.toString());
-            if (contador > 100) {
-                break;
-            }
-        }
+			contador++;
+
+			// System.out.println("orden:"+ pasillo.toString());
+			OrderStatusChecker orderStatus = new OrderStatusChecker();
+			ApiService apiService = new ApiService();
+			String respuesta = apiService.getApiResponse(pasillo.getPosOrderPasillo());
+
+			try {
+				// Verificar si la respuesta es válida
+				pasillo.setconfirmacion(orderStatus.isOrderConfirmed(respuesta));
+				
+				pasillo.setTotal(orderStatus.ObtenerOrder_total(respuesta));
+
+			} catch (Exception e) {
+				// Manejo del error si no es un JSON válido
+				System.err.println("Error al procesar la respuesta de la API: " + e.getMessage());
+				System.err.println("Respuesta recibida: " + respuesta);
+				pasillo.setconfirmacion("0"); // Valor predeterminado en caso de error
+			}
+
+			System.out.println("Número de orden: " + pasillo.toString());
+			
+			 // if(contador >100) { break; }
+			 
+		}
+
         
     	DataInserter dt = new DataInserter();
     		dt.insertData(pasilloList);

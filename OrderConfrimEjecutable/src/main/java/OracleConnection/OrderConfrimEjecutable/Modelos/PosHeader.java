@@ -207,6 +207,7 @@ public class PosHeader {
                 ", codigoRespuesta='" + codigoRespuesta + '\'' +
                 ", confirmacion='" + confirmacion + '\'' +
                 ", numTarjeta='" + numTarjeta + '\'' +
+                ", Total='" + total_order + '\'' +
                 '}';
     }
 

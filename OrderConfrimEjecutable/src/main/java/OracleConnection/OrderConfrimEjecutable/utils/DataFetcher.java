@@ -120,7 +120,7 @@ public class DataFetcher {
 	    String queryPagos = "SELECT p.POS_STORE, p.POS_TERMINAL, p.POS_TRANSACTION, "
 	            + "       p.POS_TENDER_TYPE_CODE, p.POS_AMOUNT_DUE, p.POS_TENDER_AUTHORIZATION_TEXT, p.POS_CHARGE_OPTIONS, "
 	            + "       p.POS_AUTHORIZATION_CODE, p.POS_RESPONSE_CODE, p.POS_ACCOUNT_NUMBER, p.POS_TENDER_DELETED "
-	            + "FROM ONLINE_POS_PAGOS p " + "WHERE p.POS_STORE = ? AND p.POS_TERMINAL = ? AND p.POS_TRANSACTION = ?";
+	            + "FROM ONLINE_POS_PAGOS p " + "WHERE p.POS_STORE = ? AND p.POS_TERMINAL = ? AND p.POS_TRANSACTION = ? AND p.POS_BUSINESS_DATE = ?";
 
 	    try (Connection connection = OracleDBConnection.getConnection();
 	         PreparedStatement preparedStatement = connection.prepareStatement(queryPagos)) {
@@ -129,6 +129,7 @@ public class DataFetcher {
 	            preparedStatement.setString(1, header.getPosStore());
 	            preparedStatement.setString(2, header.getPosTerminal());
 	            preparedStatement.setString(3, header.getPosTransaction());
+	            preparedStatement.setString(4, header.getPosTransactionDate());
 
 	            try (ResultSet resultSet = preparedStatement.executeQuery()) {
 	                while (resultSet.next()) {

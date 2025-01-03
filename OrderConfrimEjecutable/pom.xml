@@ -5,6 +5,7 @@
     <groupId>OracleConnection</groupId>
     <artifactId>OrderConfrimEjecutable</artifactId>
     <version>0.0.1-SNAPSHOT</version>
+    <!-- Empaquetado del proyecto como jar, pero solo será el Fat JAR con dependencias -->
     <packaging>jar</packaging>
 
     <name>OrderConfrimEjecutable</name>
